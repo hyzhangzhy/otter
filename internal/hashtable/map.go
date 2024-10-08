@@ -83,11 +83,13 @@ type table[K comparable] struct {
 }
 
 func (t *table[K]) addSize(bucketIdx uint64, delta int) {
+	//nolint:gosec // there will never be an overflow
 	counterIdx := uint64(len(t.size)-1) & bucketIdx
 	atomic.AddInt64(&t.size[counterIdx].c, int64(delta))
 }
 
 func (t *table[K]) addSizePlain(bucketIdx uint64, delta int) {
+	//nolint:gosec // there will never be an overflow
 	counterIdx := uint64(len(t.size)-1) & bucketIdx
 	t.size[counterIdx].c += int64(delta)
 }
@@ -142,6 +144,7 @@ func newMap[K comparable, V any](nodeManager *node.Manager[K, V], size int) *Map
 	if size <= minNodeCount {
 		t = newTable(minBucketCount, maphash.NewHasher[K]())
 	} else {
+		//nolint:gosec // there will never be an overflow
 		bucketCount := xmath.RoundUpPowerOf2(uint32(size / bucketSize))
 		t = newTable(int(bucketCount), maphash.NewHasher[K]())
 	}
@@ -158,6 +161,7 @@ func newTable[K comparable](bucketCount int, prevHasher maphash.Hasher[K]) *tabl
 		counterLength = maxCounterLength
 	}
 	counter := make([]paddedCounter, counterLength)
+	//nolint:gosec // there will never be an overflow
 	mask := uint64(len(buckets) - 1)
 	t := &table[K]{
 		buckets: buckets,
@@ -434,6 +438,7 @@ func (m *Map[K, V]) resize(known *table[K], hint resizeHint) {
 	if hint != clearHint {
 		for i := 0; i < tableLen; i++ {
 			copied := m.copyBuckets(&t.buckets[i], nt)
+			//nolint:gosec // there will never be an overflow
 			nt.addSizePlain(uint64(i), copied)
 		}
 	}
